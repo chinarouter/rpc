@@ -14,3 +14,4 @@ gcc -o s server.c rpc_s1.c rpc.c  sjb_struct_s1.c cJSON/cJSON.c  -lm
 ./s  
 ./c  
 
+![Alt text](/run.jpg)
