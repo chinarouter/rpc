@@ -26,21 +26,21 @@ int main()
     else if(r == 0)
       continue;
     
-    HASH_FIND_STR(funcs, msg->name, s);
+    HASH_FIND_STR(funcs, msg->data, s);
     if (s)
     {
       int rsi = 0;
       char req[64*1024] = {0};
       char rsp[64*1024] = {0};
       
-      if(msg->size > 0 && s->req)
+      if(msg->size > strlen(msg->data)+1 && s->req)
       {
-        cJSON* in = cJSON_Parse(msg->data);
+        cJSON* in = cJSON_Parse(msg->data + strlen(msg->data)+1);
         s->req(in, 1, req, 0, 0);
         cJSON_Delete(in);
       }
       
-      msg->size = 0;
+      msg->size = strlen(msg->data)+1;
       if((msg->err = s->ucb(req, 0, rsp, &rsi)) == 0)
       {
         if(rsi > 0 && s->rsp)
@@ -50,20 +50,20 @@ int main()
           char* print = cJSON_Print(out);
           if(print)
           {
-            sprintf(msg->data, "%s", print);
-            msg->size = strlen(print)+1;
+            sprintf(msg->data+msg->size, "%s", print);
+            msg->size += strlen(print)+1;
             free(print);
           }
           cJSON_Delete(out);
         }
       }
-      printf("%s => %s' func is %p\n", __func__, msg->name, s->ucb);
+      printf("%s => %s' func is %p\n", __func__, msg->data, s->ucb);
     }
     else
     {
       msg->size = 0;
       msg->err  = RPC_ERR_UNFUNC;
-      printf("%s => %s' func is unfunc\n", __func__, msg->name);
+      printf("%s => %s' func is unfunc\n", __func__, msg->data);
     }
     rpc_serv_sendmsg(__ctx, msg, sizeof(buf), &peer);
   }

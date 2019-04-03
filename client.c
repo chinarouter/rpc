@@ -10,8 +10,9 @@ int cli_call(char *name, void *req, void *rsp)
   char buf[64*1024] = {0};
   rpc_msg_t *msg = (rpc_msg_t*)buf;
   
-  strncpy(msg->name, name, sizeof(msg->name)-1);
-  HASH_FIND_STR(funcs, msg->name, s);
+  strncpy(msg->data, name, STRID_MAX_SIZE-1);
+  msg->size = strlen(msg->data)+1;
+  HASH_FIND_STR(funcs, msg->data, s);
   if (!s)
     return -1;
   
@@ -22,8 +23,8 @@ int cli_call(char *name, void *req, void *rsp)
     char* print = cJSON_Print(out);
     if(print)
     {
-      sprintf(msg->data, "%s", print);
-      msg->size = strlen(print)+1;
+      sprintf(msg->data + msg->size, "%s", print);
+      msg->size += strlen(print)+1;
       free(print);
     }
     cJSON_Delete(out);
@@ -36,9 +37,9 @@ int cli_call(char *name, void *req, void *rsp)
   else
   {
     printf("call %s ok r:%d\n", name, r);
-    if(msg->size > 0 && s->rsp)
+    if(msg->size > strlen(msg->data)+1 && s->rsp)
     {
-        cJSON* in = cJSON_Parse(msg->data);
+        cJSON* in = cJSON_Parse(msg->data + strlen(msg->data)+1);
         s->rsp(in, 1, rsp, 0, 0);
         cJSON_Delete(in);
     }

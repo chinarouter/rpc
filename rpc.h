@@ -7,6 +7,7 @@
 #ifndef __rpc_h__
 #define __rpc_h__
 
+#include <stdint.h>  /* uint64_t */
 #include <string.h>  /* strcpy */
 #include <stdlib.h>  /* malloc */
 #include <stdio.h>   /* printf */
@@ -21,14 +22,24 @@ enum {
   RPC_ERR_RECV    = -10002,  /* recv error   */
   RPC_ERR_TIMEOUT = -10003,  /* recv timeout */
   RPC_ERR_UNFUNC  = -10004,  /* unknown func */
+  RPC_ERR_UNVER   = -10005,  /* unknown ver  */
 };
+
+enum {
+  RPC_VER_STRID_JSON = 0,   /* strid + json   */
+  RPC_VER_INTID_STRU = 1,   /* intid + struct */
+};
+
 
 //--- msg;
 typedef struct {
-  char name[32];     /* msgid      */
-  int  err;          /* err        */
-  int  size;         /* body size  */
-  char data[0];      /* body data  */
+  int16_t  ver;         /* RPC_VER    */
+  int16_t  err;         /* errno      */
+  uint16_t chn;         /* channel    */
+  uint16_t seq;         /* sequence   */
+  uint32_t ts;          /* timestamp  */
+  uint32_t size;        /* data size  */
+  uint8_t  data[0];     /* msgid+data */
 }rpc_msg_t;
 
 
@@ -53,14 +64,17 @@ int   rpc_cli_ctx_free(void *_ctx);
 int   rpc_cli_sendrecv(void *_ctx, rpc_msg_t *msg_buf, int buf_size);
 
 //--- server;
+
+#define STRID_MAX_SIZE 32
+
 typedef void (sjb_serialize_cb)(void *c, int m, void *stru, int r1, int r2);
 typedef int (rpc_ucb_cb)(void *req, int si, void *rsp, int *rsi);
 typedef struct {
-    char name[32];           /* key (string is WITHIN the structure) */
-    sjb_serialize_cb *req;   /* req serialize  */
-    sjb_serialize_cb *rsp;   /* rsp serialize  */
-    rpc_ucb_cb *ucb;         /* usercb         */
-    UT_hash_handle hh;       /* makes this structure hashable */
+    char name[STRID_MAX_SIZE];/* key (string is WITHIN the structure) */
+    sjb_serialize_cb *req;    /* req serialize  */
+    sjb_serialize_cb *rsp;    /* rsp serialize  */
+    rpc_ucb_cb *ucb;          /* usercb         */
+    UT_hash_handle hh;        /* makes this structure hashable */
 }rpc_entry_t;
 
 void *rpc_serv_ctx_new(rpc_init_t *init);

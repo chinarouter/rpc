@@ -43,7 +43,7 @@ int   rpc_cli_sendrecv(void *_ctx, rpc_msg_t *msg_buf, int buf_size)
   struct sockaddr_in fromaddr;
   int len = sizeof(fromaddr);
   sendto(ctx->fd, msg_buf, msg_buf->size+sizeof(rpc_msg_t), 0, (struct sockaddr *)&ctx->to, sizeof(ctx->to));
-  printf("%s => name:%s, to:%s\n", __func__, msg_buf->name, inet_ntoa(ctx->to.sin_addr));
+  printf("%s => name:%s, to:%s\n", __func__, msg_buf->data, inet_ntoa(ctx->to.sin_addr));
   
   int ret = recvfrom(ctx->fd, msg_buf, buf_size, 0, (struct sockaddr *) &fromaddr, &len);
   if (ret < 0)
@@ -55,7 +55,7 @@ int   rpc_cli_sendrecv(void *_ctx, rpc_msg_t *msg_buf, int buf_size)
      return RPC_ERR_RECV;
   }
   
-  printf("%s => name:%s, from:%s\n", __func__, msg_buf->name, inet_ntoa(fromaddr.sin_addr));
+  printf("%s => name:%s, from:%s\n", __func__, msg_buf->data, inet_ntoa(fromaddr.sin_addr));
   return msg_buf->err;
 }
 
@@ -109,7 +109,7 @@ int  rpc_serv_recvmsg(void *_ctx, rpc_msg_t *msg_buf, int buf_size, struct socka
   }
   
   struct sockaddr_in *fromaddr = (struct sockaddr_in *)from;
-  printf("%s => name:%s, from:%s\n", __func__, msg_buf->name, inet_ntoa(fromaddr->sin_addr));
+  printf("%s => name:%s, from:%s\n", __func__, msg_buf->data, inet_ntoa(fromaddr->sin_addr));
   
   return msg_buf->size + sizeof(rpc_msg_t);
 }
@@ -122,7 +122,7 @@ int  rpc_serv_sendmsg(void *_ctx, rpc_msg_t *msg_buf, int buf_size, struct socka
   sendto(ctx->fd, msg_buf, msg_buf->size + sizeof(rpc_msg_t), 0, to, sizeof(*to));
   
   struct sockaddr_in *toaddr = (struct sockaddr_in *)to;
-  printf("%s => name:%s, to:%s\n", __func__, msg_buf->name, inet_ntoa(toaddr->sin_addr));
+  printf("%s => name:%s, to:%s\n", __func__, msg_buf->data, inet_ntoa(toaddr->sin_addr));
   
   return msg_buf->size + sizeof(rpc_msg_t);
 }
